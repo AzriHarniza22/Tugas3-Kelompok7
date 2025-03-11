@@ -594,18 +594,77 @@ app.post("/unfavorite/:id", (req, res) => {
 
 
 // API untuk menambahkan item baru
-
+app.post("/items", (req, res) => {
+  const newItem = {
+    id: items.length ? Math.max(...items.map(i => i.id)) + 1 : 1,
+    name: req.body.name,
+    genre: req.body.genre,
+    author: req.body.author,
+    yearStarted: parseInt(req.body.yearStarted),
+    yearEnded: req.body.yearEnded ? parseInt(req.body.yearEnded) : null,
+    episodes: parseInt(req.body.episodes),
+    rating: parseFloat(req.body.rating),
+    imageUrl: `/api/placeholder/300/200?text=${encodeURIComponent(req.body.name)}`
+  };
+  items.push(newItem);
+  res.redirect("/items");
+});
 
 // API untuk memperbarui item
-
+app.post("/items/:id", (req, res) => {
+  const item = items.find(i => i.id === parseInt(req.params.id));
+  if (!item) return res.status(404).send("Item not found");
+  
+  const oldName = item.name;
+  item.name = req.body.name;
+  item.genre = req.body.genre;
+  item.author = req.body.author;
+  item.yearStarted = parseInt(req.body.yearStarted);
+  item.yearEnded = req.body.yearEnded ? parseInt(req.body.yearEnded) : null;
+  item.episodes = parseInt(req.body.episodes);
+  item.rating = parseFloat(req.body.rating);
+  
+  // Update image URL if name changed
+  if (oldName !== item.name) {
+    item.imageUrl = `/api/placeholder/300/200?text=${encodeURIComponent(item.name)}`;
+  }
+  
+  res.redirect("/items");
+});
 
 // API untuk menghapus item
-
+app.post("/delete/:id", (req, res) => {
+  items = items.filter(i => i.id !== parseInt(req.params.id));
+  favorites = favorites.filter(id => id !== parseInt(req.params.id));
+  res.redirect("/items");
+});
 
 // Bulk import API 
+app.post("/api/import", (req, res) => {
+  if (!Array.isArray(req.body)) {
+    return res.status(400).json({ error: "Expected an array of items" });
+  }
+  
+  try {
+    const newItems = req.body.map(item => ({
+      id: items.length ? Math.max(...items.map(i => i.id)) + 1 : 1,
+      name: item.name,
+      genre: item.genre,
+      author: item.author,
+      yearStarted: parseInt(item.yearStarted) || 2000,
+      yearEnded: item.yearEnded ? parseInt(item.yearEnded) : null,
+      episodes: parseInt(item.episodes) || 0,
+      rating: parseFloat(item.rating) || 0,
+      imageUrl: `/api/placeholder/300/200?text=${encodeURIComponent(item.name)}`
+    }));
+    
+    items = [...items, ...newItems];
+    res.status(201).json({ message: `${newItems.length} items imported successfully` });
+  } catch (err) {
+    res.status(400).json({ error: "Invalid data format" });
+  }
+});
 
-
-// Export fitur (JSON download)
 
 
 app.listen(port, () => {
