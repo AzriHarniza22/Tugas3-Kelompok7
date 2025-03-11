@@ -665,7 +665,12 @@ app.post("/api/import", (req, res) => {
   }
 });
 
-
+// Export fitur (JSON download)
+app.get("/export", (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename=anime-data.json');
+  res.json(items);
+});
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
