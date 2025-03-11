@@ -2,6 +2,11 @@
 
 # Project 3 PPL
 
+## Kelompok 7
+- Nauval Rifqi (2208107010075)
+- Tiara Agustin (2208107010004)
+- Azri Harniza (2208107010034)
+
 ## Sistem API Sederhana
 
 Buatlah API sederhana dengan menggunakan express. API dapat memberikan data dan menambahkan data ke dalam sistem database.
