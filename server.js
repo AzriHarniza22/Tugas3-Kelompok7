@@ -497,18 +497,100 @@ app.get("/items/:id", (req, res) => {
   });
 
 // Halaman favorit
-
+app.get("/favorites", (req, res) => {
+  const favoriteItems = items.filter(item => favorites.includes(item.id));
+  
+  let itemList = favoriteItems.map(item => 
+    `<div class="card anime-card">
+      <img src="${item.imageUrl}" alt="${item.name}" class="anime-image">
+      <h3>${item.name}</h3>
+      <p>${item.genre} - By ${item.author}</p>
+      <p>Rating: ${'★'.repeat(Math.round(item.rating))}</p>
+      <a href="/items/${item.id}">View</a>
+      <form action="/unfavorite/${item.id}" method="POST" style="display:inline;">
+        <button type="submit" class="favorite">Unfavorite</button>
+      </form>
+    </div>`
+  ).join("");
+  
+  res.send(`
+    ${style}
+    <h1>Your Favorite Anime</h1>
+    <div class="anime-grid">${itemList.length ? itemList : '<div>No favorites yet</div>'}</div>
+    <a href="/">Back to Home</a>
+  `);
+});
 
 // Halaman tambah anime 
-
+app.get("/add", (req, res) => {
+  res.send(`
+    ${style}
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <h1>Add New Anime</h1>
+      <form action="/items" method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <input type="text" name="name" placeholder="Name" required>
+          <input type="text" name="genre" placeholder="Genre" required>
+          <input type="text" name="author" placeholder="Author" required>
+          <input type="number" name="yearStarted" placeholder="Year Started" required>
+          <input type="number" name="yearEnded" placeholder="Year Ended (empty if ongoing)">
+          <input type="number" name="episodes" placeholder="Episodes" required>
+          <input type="number" name="rating" step="0.1" min="0" max="5" placeholder="Rating (0-5)" required>
+        </div>
+        <button type="submit" style="margin-top: 15px;">Add</button>
+      </form>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="/">Back to Home</a>
+    </div>
+  `);
+});
 
 // Halaman edit anime 
-
+app.get("/edit/:id", (req, res) => {
+  const item = items.find(i => i.id === parseInt(req.params.id));
+  if (!item) return res.status(404).send(`${style}<h1>Item not found</h1><a href='/'>Back to Home</a>`);
+  
+  res.send(`
+    ${style}
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <h1>Edit ${item.name}</h1>
+      <img src="${item.imageUrl}" alt="${item.name}" style="width: 300px; height: 200px; object-fit: cover; margin: 0 auto 20px; display: block; border-radius: 8px;">
+      <form action="/items/${item.id}" method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <input type="text" name="name" value="${item.name}" required>
+          <input type="text" name="genre" value="${item.genre}" required>
+          <input type="text" name="author" value="${item.author}" required>
+          <input type="number" name="yearStarted" value="${item.yearStarted}" required>
+          <input type="number" name="yearEnded" value="${item.yearEnded || ''}" placeholder="Leave empty if ongoing">
+          <input type="number" name="episodes" value="${item.episodes}" required>
+          <input type="number" name="rating" step="0.1" min="0" max="5" value="${item.rating}" required>
+        </div>
+        <button type="submit" style="margin-top: 15px;">Update</button>
+      </form>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="/items">Back to Anime List</a>
+      <a href="/">Back to Home</a>
+    </div>
+  `);
+});
 
 // Tambah ke favorit
-
+app.post("/favorite/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  if (!favorites.includes(id)) {
+    favorites.push(id);
+  }
+  res.redirect(req.headers.referer || "/items");
+});
 
 // Hapus dari favorit
+app.post("/unfavorite/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  favorites = favorites.filter(itemId => itemId !== id);
+  res.redirect(req.headers.referer || "/favorites");
+});
 
 
 // API untuk menambahkan item baru
